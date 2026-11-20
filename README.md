@@ -1,102 +1,46 @@
-# Network Speed Test – README
+# speedtest.py – Netzwerk-Speedtest (iperf3-ähnlich)
 
-Eine kleine Python‑Implementierung eines Netzwerk‑Speed‑Tests, ähnlich wie **iperf3**. Misst Durchsatz (Mbps) und – im UDP‑Modus – zudem Paketverlust, RTT und Jitter.
+Kleiner Python-Speedtest für TCP und UDP. Server und Client sind im selben Skript.
 
----
+## Schnellstart
 
-## Installation
-
-Lade die Datei `speedtest.py` auf beide Rechner (Server und Client) und stelle sicher, dass Python 3.x installiert ist.
-
+**Server** (Terminal 1, läuft bis Ctrl+C):
 ```bash
-chmod +x speedtest.py   # optional: ausführbar machen
+python speedtest.py -s              # TCP
+python speedtest.py -s -u           # UDP
 ```
 
----
-
-## Verwendung
-
-Starte den Server in einem Terminal und den Client in einem anderen.
-
-### TCP‑Test (Standard)
-
-**Server**
-
+**Client** (Terminal 2):
 ```bash
-python speedtest.py -s -p 5201 -t 10
+python speedtest.py -c 192.168.89.10              # TCP
+python speedtest.py -c 192.168.89.10 -u -b 100    # UDP, Zielrate 100 Mbit/s
+python speedtest.py -c 192.168.89.10 -t 30        # 30 s Testdauer
 ```
 
-**Client**
+## Optionen
 
-```bash
-python speedtest.py -c <SERVER_IP> -p 5201 -t 10
-```
+| Option | Bedeutung | Standard |
+|---|---|---|
+| `-s`, `--server` | Server-Modus (lauscht, läuft bis Ctrl+C) | – |
+| `-c SERVER_IP` | Client-Modus, Ziel-IP (ohne Wert: `127.0.0.1`) | – |
+| `-p PORT` | Port | `5201` |
+| `-t SEKUNDEN` | Testdauer (nur Client) | `10` |
+| `-u`, `--udp` | UDP statt TCP | TCP |
+| `-b MBIT` | UDP-Zielrate in Mbit/s (`0` = unbegrenzt) | `0` |
+| `-l BYTE` | UDP-Paketgröße | `1400` |
+| `-h` / `-V` | Hilfe / Version | – |
 
-### UDP‑Test
+## Ausgabe
 
-Füge dem Server und Client jeweils `-u` hinzu.
-
-**Server**
-
-```bash
-python speedtest.py -s -u -p 5201 -t 10
-```
-
-**Client**
-
-```bash
-python speedtest.py -c <SERVER_IP> -u -p 5201 -t 10
-```
-
----
-
-## Optionen‑Übersicht
-
-| Flag | Bedeutung | Standard |
-|------|-----------|----------|
-| `-s`, `--server` | Server‑Modus (auf dieses Rechner lauschen) | – |
-| `-c`, `--client` | Client‑Modus (Verbindung zu Server herstellen) | – |
-| `-p`, `--port` | Port‑Nummer für die Verbindung | `5201` |
-| `-t`, `--time` | Testdauer in Sekunden | `10` |
-| `-u`, `--udp` | UDP‑Modus statt TCP | TCP |
-| `-h`, `--help` | Hilfe‑Anzeige | – |
-
----
-
-## Beispiel‑Ausgabe (TCP)
-
-```
-[SERVER] Listening on 0.0.0.0:5201 for 10s
-
-[SERVER] Connection from 127.0.0.1:59324
-
-[SERVER] Received: 1250000 bytes
-
-[SERVER] Duration: 10.00s
-[SERVER] Bandwidth: 1.00 Mbps
-```
-
-Beispiel‑Ausgabe (UDP)
-
-```
-[UDP SERVER] Listening on 0.0.0.0:5201 for 10s
-
-[UDP SERVER] Packets received: 120
-[UDP SERVER] Duration: 10.00s
-[UDP SERVER] Bandwidth: 2.88 Mbps
-
-[UDP CLIENT] Packets sent: 125
-[UDP CLIENT] Packet loss: 4
-[UDP CLIENT] Average RTT: 1.23 ms
-[UDP CLIENT] Jitter: 0.45 ms
-[UDP CLIENT] Bandwidth: 2.88 Mbps
-```
-
----
+* **TCP**: Dauer, gesendete Datenmenge, Durchsatz in Mbit/s (1-s-Intervalle + Summe).
+* **UDP**: gesendete/empfangene Pakete, Durchsatz, **Paketverlust in %**, **Jitter in ms**
+  (Verlust und Jitter werden serverseitig ermittelt und am Ende an den Client zurückgemeldet).
 
 ## Hinweise
 
-- Stelle sicher, dass die Firewalls beider Rechner den gewählten Port (default 5201) freigeben.
-- Die Standard‑IP für den Client ist `127.0.0.1` (localhost). Verwende die echte IP‑Adresse des Servers für Tests über ein Netzwerk.
-- Die Bandbreiten‑Formel rechnet korrekt in **Mbps** (1 Mbps = 10⁶ bit/s).
-
+* Server beenden: **Ctrl+C** – funktioniert jederzeit, auch während eines laufenden Tests.
+* Firewall muss den Port (Standard 5201) auf dem Server-Rechner erlauben.
+* UDP ohne `-b` sendet so schnell wie möglich (CPU/NIC-Limit); für reproduzierbare
+  Messungen eine Zielrate setzen, z. B. `-b 100`.
+* Der Server meldet beim Start alle lokalen IPv4-Adressen – praktisch, um die richtige
+  IP für den Client zu finden.
